@@ -1,0 +1,39 @@
+name: Build "CppLabWeb" target from "cpp_lab" repo and deploy here in "marleeeeeey.github.io"
+on:
+  workflow_dispatch:
+    permissions:
+      contents: write
+
+jobs:
+  build-from-cpp-lab:
+    uses: marleeeeeey/cpp_lab/.github/workflows/cpp_lab_web_build.yml@main
+    secrets: inherit
+
+  deploy:
+    needs: build-from-cpp-lab
+    runs-on: ubuntu-latest
+
+
+    steps:
+
+      - name: Download build artifact from inner workflow (cpp_lab)
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: cpp_lab_web_build_artifact
+          path: cpp_lab_web_build_artifact
+
+      - name: Unzip web build
+        run: |
+          mkdir -p web_build
+          unzip cpp_lab_web_build_artifact/GameEngine_itch_web.zip -d web_build
+            #  web_build/GameEngine.data
+            #  web_build/GameEngine.js
+            #  web_build/GameEngine.wasm
+            #  web_build/index.html
+
+      - name: Deploy to pages repo
+        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4.0.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: web_build
